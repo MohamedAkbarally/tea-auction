@@ -13,6 +13,7 @@ const fs = require("fs");
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
+const keys = require("./config/keys");
 
 //Server Properties
 var csvpath = "auction.csv";
@@ -72,7 +73,12 @@ var upload = multer({
 });
 
 // database config
-const db = require("./config/keys").mongoURI;
+
+if (process.env.NODE_ENV === "production") {
+  db = require("./config/keys_p").mongoURI;
+} else {
+  db = require("./config/keys").mongoURI;
+}
 
 // mongoose middleware
 mongoose
@@ -88,10 +94,10 @@ require("./config/passport")(passport);
 app.use("/css", express.static(path.join(__dirname, "routes/public/css")));
 
 // server properties endpoint page
-app.use(express.static(path.join(__dirname, "build")));
+app.use(express.static(path.join(__dirname, "client/build")));
 
 app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
 });
 
 app.use(index);
@@ -137,25 +143,29 @@ app.post("/startserver", function (req, res) {
 io.use(function (socket, next) {
   // socket authentication
   if (socket.handshake.query && socket.handshake.query.token) {
-    jwt.verify(socket.handshake.query.token, "secret", function (err, decoded) {
-      //throw error if authentication fails
-      if (err) {
-        next(new Error("Authentication error"));
-        return;
-      }
-      socket.decoded = decoded;
+    jwt.verify(
+      socket.handshake.query.token,
+      process.env.SECRET_KEY || "secret",
+      function (err, decoded) {
+        //throw error if authentication fails
+        if (err) {
+          next(new Error("Authentication error"));
+          return;
+        }
+        socket.decoded = decoded;
 
-      //throw error if the user is logged in another account
-      if (Object.values(bidders_names).indexOf(decoded.name) > -1) {
-        next(new Error("Multiple Users"));
-        return;
-      }
+        //throw error if the user is logged in another account
+        if (Object.values(bidders_names).indexOf(decoded.name) > -1) {
+          next(new Error("Multiple Users"));
+          return;
+        }
 
-      // record bidders name
-      bidders_names[socket.id] = decoded.name;
-      console.log(decoded.name + " has joined");
-      next();
-    });
+        // record bidders name
+        bidders_names[socket.id] = decoded.name;
+        console.log(decoded.name + " has joined");
+        next();
+      }
+    );
   } else {
     next(new Error("Authentication error"));
   }
