@@ -6,11 +6,7 @@ const User = require("../models/User");
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 
-if (process.env.NODE_ENV === "production") {
-  opts.secretOrKey = require("./keys_p").secretOrKey;
-} else {
-  opts.secretOrKey = require("./keys").secretOrKey;
-}
+opts.secretOrKey = require("./keys").secretOrKey;
 
 module.exports = (passport) => {
   passport.use(
