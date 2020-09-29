@@ -14,3 +14,6 @@ build the client and run the server
 ```
 node run dev
 ```
+
+# Demo
+A demo can be seen at https://tea-auction-demo.herokuapp.com/
