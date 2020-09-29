@@ -38,6 +38,8 @@ const resetInterval = () => {
   clearInterval(interval);
   interval = setInterval(() => auctionInterval(), parseInt(1000));
 };
+
+//function to get google doc csv of lots
 const getCSV = () => {
   axios
     .get(
@@ -49,17 +51,19 @@ const getCSV = () => {
       var arr = response.data.split("\r");
       var headers = arr[0].split(",");
       var headers = arr[0].split(",");
-      for (var i = 1; i < arr.length; i++) {
-        var data = arr[i].split(",");
-        var obj = {};
-        for (var j = 0; j < data.length; j++) {
-          obj[headers[j].trim()] = data[j].trim();
+      if (arr.length > 1) {
+        for (var i = 1; i < arr.length; i++) {
+          var data = arr[i].split(",");
+          var obj = {};
+          for (var j = 0; j < data.length; j++) {
+            obj[headers[j].trim()] = data[j].trim();
+          }
+          results.push(obj);
         }
-        results.push(obj);
+        // start auction
+        io.emit("lot", results[currentLot]);
+        interval = setInterval(() => auctionInterval(), 1000);
       }
-      // start auction
-      io.emit("lot", results[currentLot]);
-      interval = setInterval(() => auctionInterval(), 1000);
     })
     .catch(function (error) {
       results = [];
@@ -127,10 +131,10 @@ require("./config/passport")(passport);
 app.use("/css", express.static(path.join(__dirname, "routes/public/css")));
 
 // server properties endpoint page
-app.use(express.static(path.join(__dirname, "build")));
+app.use(express.static(path.join(__dirname, "client/build")));
 
 app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
 });
 
 app.use(index);

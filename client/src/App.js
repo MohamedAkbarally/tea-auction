@@ -11,6 +11,8 @@ import PrivateRoute from "./common/PrivateRoute";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 
+console.log("env", process.env.REACT_APP_NOT_SECRET_CODE, process.env.NODE_ENV);
+
 const invalid_token = () => {
   authenticated_initial = false;
   user_intial = null;
