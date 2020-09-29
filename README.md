@@ -4,7 +4,7 @@ A auction demo to test the efficacy of variation of a dutch style auction. The a
 # Program
 the client side is built using react. the users authetication and information is stored on mongodb. The auction schedule (the information about each lot) is stored on a google sheet (however this could also be migrated to the mongodb database in the future. The bidding is done over sockets using socket-io on an express server.
 
-#Usage
+# Usage
 to run the server
 ```
 node app.js
