@@ -10,6 +10,7 @@ const mongoose = require("mongoose");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
+const axios = require("axios");
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
@@ -36,6 +37,44 @@ const biddingInterval = () => {
 const resetInterval = () => {
   clearInterval(interval);
   interval = setInterval(() => auctionInterval(), parseInt(1000));
+};
+const getCSV = () => {
+  axios
+    .get(
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ71ZksMZxUcxEqDk6Ure-DpgjQ5vKfrgouSGCZMrEx1zYpeLq9BDCtfWzZYXcA3eXLNpkf5HqsXifZ/pub?output=csv"
+    )
+    .then((response) => {
+      results = [];
+      console.log();
+      var arr = response.data.split("\r");
+      var headers = arr[0].split(",");
+      var headers = arr[0].split(",");
+      for (var i = 1; i < arr.length; i++) {
+        var data = arr[i].split(",");
+        var obj = {};
+        for (var j = 0; j < data.length; j++) {
+          obj[headers[j].trim()] = data[j].trim();
+        }
+        results.push(obj);
+      }
+      // start auction
+      io.emit("lot", results[currentLot]);
+      interval = setInterval(() => auctionInterval(), 1000);
+    })
+    .catch(function (error) {
+      results = [];
+      console.log("error");
+      fs.createReadStream("auction.csv")
+        .pipe(csv())
+        .on("data", (data) => {
+          results.push(data);
+        })
+        .on("end", () => {
+          // start auction
+          io.emit("lot", results[currentLot]);
+          interval = setInterval(() => auctionInterval(), 1000);
+        });
+    });
 };
 
 const app = express();
@@ -102,15 +141,6 @@ app.post("/startserver", function (req, res) {
   clearInterval(interval);
   io.emit("log", null);
 
-  //if there is a valid file set it to that
-  /* 
-  if (req.file) {
-    csvpath = req.file.path;
-  } else {
-    csvpath = "auction.csv";
-  }
-  */
-
   // clear properties
   currentLot = 0;
   results = [];
@@ -122,16 +152,7 @@ app.post("/startserver", function (req, res) {
   time = START_TIME;
 
   // read auction csv
-  fs.createReadStream("auction.csv")
-    .pipe(csv())
-    .on("data", (data) => {
-      results.push(data);
-    })
-    .on("end", () => {
-      // start auction
-      io.emit("lot", results[currentLot]);
-      interval = setInterval(() => auctionInterval(), 1000);
-    });
+  getCSV();
 });
 
 io.use(function (socket, next) {
