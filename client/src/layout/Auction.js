@@ -9,6 +9,7 @@ import Bidders from "./Bidders";
 const ENDPOINT = "https://tea-auction-demo.herokuapp.com";
 //const ENDPOINT = "http://localhost:4001";
 
+console.log("h");
 const ENTER_KEY = 13;
 var socket = null;
 
