@@ -7,6 +7,7 @@ import Timer from "./Timer";
 import Bidders from "./Bidders";
 
 const ENDPOINT = "https://tea-auction-demo.herokuapp.com";
+//on dev
 //const ENDPOINT = "http://localhost:4001";
 
 const ENTER_KEY = 13;
