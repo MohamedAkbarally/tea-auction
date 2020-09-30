@@ -163,3 +163,59 @@ body {
   font-weight: 700;
   font-size: 20px;
 }
+
+:root {
+  --avatar-size: 50px;
+  /* change this value anything, e.g., 100px, 10rem, etc. */
+}
+
+.circle {
+  color: white;
+  background-color: #ccc;
+  border-radius: 50%;
+  margin-left: 10px;
+  height: var(--avatar-size);
+  text-align: center;
+  width: var(--avatar-size);
+  position: relative;
+}
+
+.initials {
+  font-size: calc(var(--avatar-size) / 2.5); /* 50% of parent */
+  line-height: 1;
+  position: relative;
+  top: calc(var(--avatar-size) * 0.3); /* 25% of parent */
+}
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: rgb(122, 122, 122);
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 3px;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: -10;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.tooltip .tooltiptext {
+  width: 100px;
+  top: 110%;
+  left: 50%;
+  margin-left: -50px; /* Use half of the width (120/2 = 60), to center the tooltip */
+}

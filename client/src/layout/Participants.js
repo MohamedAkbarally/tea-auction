@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from "react";
-export default function Participants(props) {
-  const { socket } = props;
-  const [participants, setParticipants] = useState(null);
+import React, { useContext } from "react";
+import { CounterContext } from "./Auction";
 
-  useEffect(() => {
-    if (socket) {
-      socket.on("participants", function (data) {
-        setParticipants(data);
-        console.log(data);
-      });
-
-      socket.emit("participants", "get");
+const getCount = (arrToConvert) => {
+  var newArr = 0;
+  for (var i = 0; i < arrToConvert.length; i++) {
+    if (arrToConvert[i][1] == true) {
+      newArr++;
     }
-  }, [socket]);
-
+  }
+  return newArr;
+};
+export default function Participants(props) {
+  const [count] = useContext(CounterContext);
   return (
-    <div>{participants && <div>Bidders Remaining: {participants}</div>}</div>
+    <div>
+      <div>Bidders Remaining: {getCount(count)}</div>
+    </div>
   );
   //
 }

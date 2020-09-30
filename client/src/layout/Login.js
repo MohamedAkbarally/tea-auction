@@ -10,7 +10,6 @@ export default function Login(props) {
 
   const onSubmit = (e) => {
     e.preventDefault();
-    console.log(name);
 
     const userData = {
       name: name,

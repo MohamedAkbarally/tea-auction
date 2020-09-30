@@ -1,16 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, createContext } from "react";
 import socketIOClient from "socket.io-client";
 import cx from "classnames";
 import Log from "./Log";
 import Participants from "./Participants";
 import Timer from "./Timer";
+import Bidders from "./Bidders";
+
+//const ENDPOINT = "https://tea-auction-demo.herokuapp.com"
+const ENDPOINT = "http://localhost:4001";
 
 const ENTER_KEY = 13;
 var socket = null;
 
+export const CounterContext = createContext();
+
 export default function Auction(props) {
   const [bidding, isBidding] = useState(false);
   const [lot, setLot] = useState({ Status: null, "Lot Number": null });
+  const [count, setCount] = useState([]);
 
   const _handleKeyDown = (event) => {
     switch (event.keyCode) {
@@ -33,13 +40,13 @@ export default function Auction(props) {
   };
 
   useEffect(() => {
-    socket = socketIOClient("https://tea-auction-demo.herokuapp.com", {
+    socket = socketIOClient(ENDPOINT, {
       query: { token: localStorage.jwtToken },
     });
 
     socket.on("error", function (msg) {
       console.log(msg);
-
+      console.log("tellllloo");
       window.location.href = "/login";
       props.onLogout();
     });
@@ -56,7 +63,7 @@ export default function Auction(props) {
       document.removeEventListener("keydown", _handleKeyDown);
       document.removeEventListener("keyup", _handleKeyUp);
     };
-  }, []);
+  }, [props.user]);
 
   useEffect(() => {
     if (lot["Status"] === "BIDDING_B") {
@@ -92,9 +99,13 @@ export default function Auction(props) {
       <div className="vertical-center">
         <p>
           {lot["Lot Number"] && (
-            <span>Waiting for Lot #{lot["Lot Number"]} to Start</span>
+            <span>
+              Waiting for Lot #{lot["Lot Number"]} to Start at Rs.{" "}
+              {lot["Starting Price"]}
+            </span>
           )}
         </p>
+
         <Timer socket={socket}></Timer>
 
         <p>Seconds</p>
@@ -230,54 +241,57 @@ export default function Auction(props) {
   }
 
   return (
-    <div>
-      <div
-        className="container"
-        style={{ marginTop: "20px", marginBottom: "-40px" }}
-      >
-        <div className="row" style={{ marginBottom: "-40px" }}>
-          <div className="eight columns">
-            {" "}
-            <h3>Welcome, {props.user["name"]}</h3>
-          </div>
-          <div className="four columns">
-            {" "}
-            <button
-              onClick={props.onLogout}
-              className="button-primary u-pull-right"
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </div>
-      <hr style={{ width: "100vw", left: 0 }} />
-      <div
-        className="container"
-        style={{
-          marginTop: "30px",
-          minHeight: "100%",
-        }}
-      >
-        <div className="row">
-          <div className="eight columns">
-            <div
-              className={cx("main", {
-                active:
-                  (bidding && lot["Status"] === "WAITING") ||
-                  lot["Status"] === "BIDDING_B" ||
-                  lot["Status"] === "BIDDING_W",
-                failed: lot["Status"] === "BIDDING_L",
-              })}
-            >
-              {autionStatus}
+    <CounterContext.Provider value={[count, setCount]}>
+      <div>
+        <div
+          className="container"
+          style={{ marginTop: "20px", marginBottom: "-40px" }}
+        >
+          <div className="row" style={{ marginBottom: "-40px" }}>
+            <div className="eight columns">
+              {" "}
+              <h3>Welcome, {props.user["name"]}</h3>
+            </div>
+            <div className="four columns">
+              {" "}
+              <button
+                onClick={props.onLogout}
+                className="button-primary u-pull-right"
+              >
+                Log Out
+              </button>
             </div>
           </div>
-          <div className="four columns">
-            <Log socket={socket}></Log>
+        </div>
+        <hr style={{ width: "100vw", left: 0 }} />
+        <div
+          className="container"
+          style={{
+            marginTop: "30px",
+            minHeight: "100%",
+          }}
+        >
+          <div className="row">
+            <div className="eight columns">
+              <div
+                className={cx("main", {
+                  active:
+                    (bidding && lot["Status"] === "WAITING") ||
+                    lot["Status"] === "BIDDING_B" ||
+                    lot["Status"] === "BIDDING_W",
+                  failed: lot["Status"] === "BIDDING_L",
+                })}
+              >
+                {autionStatus}
+              </div>
+            </div>
+            <div className="four columns">
+              <Log socket={socket}></Log>
+            </div>
           </div>
+          <Bidders socket={socket} name={props.user["name"]}></Bidders>
         </div>
       </div>
-    </div>
+    </CounterContext.Provider>
   );
 }

@@ -11,7 +11,7 @@ import PrivateRoute from "./common/PrivateRoute";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 
-console.log("env", process.env.REACT_APP_NOT_SECRET_CODE, process.env.NODE_ENV);
+axios.defaults.baseURL = "http://localhost:4001";
 
 const invalid_token = () => {
   authenticated_initial = false;
@@ -25,7 +25,6 @@ if (localStorage.jwtToken) {
     const decoded = jwt_decode(localStorage.jwtToken);
     var authenticated_initial = true;
     var user_intial = decoded;
-    console.log(user_intial);
     const currentTime = Date.now() / 1000;
 
     if (decoded.exp < currentTime) {
@@ -46,7 +45,6 @@ function App() {
     localStorage.removeItem("jwtToken");
     window.location.href = "/login";
   };
-
   return (
     <Router>
       <div className="App">
