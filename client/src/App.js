@@ -11,7 +11,7 @@ import PrivateRoute from "./common/PrivateRoute";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 
-axios.defaults.baseURL = "http://localhost:4001";
+//axios.defaults.baseURL = "http://localhost:4001";
 
 const invalid_token = () => {
   authenticated_initial = false;
