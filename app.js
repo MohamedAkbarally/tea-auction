@@ -27,6 +27,7 @@ let interval;
 var time = START_TIME;
 var bidders = 0;
 var bidders_names = {};
+var is_participating = {};
 
 // interval helper functions
 const biddingInterval = () => {
@@ -47,7 +48,6 @@ const getCSV = () => {
     )
     .then((response) => {
       results = [];
-      console.log();
       var arr = response.data.split("\r");
       var headers = arr[0].split(",");
       var headers = arr[0].split(",");
@@ -139,6 +139,20 @@ app.get("/*", (req, res) => {
 
 app.use(index);
 
+const changeBidders = (clients) => {
+  var i;
+  Object.keys(is_participating).forEach(function (key, value) {
+    return (is_participating[key] = false);
+  });
+
+  for (i = 0; i < clients.length; i++) {
+    is_participating[bidders_names[clients[i]]] = true;
+  }
+
+  console.log("change", JSON.stringify(is_participating));
+  io.emit("bidder", is_participating);
+};
+
 // POST to change server properties (public not secured)
 app.post("/startserver", function (req, res) {
   // clear user log and interval
@@ -186,7 +200,11 @@ io.use(function (socket, next) {
   }
 }).on("connection", function (socket) {
   // connection now authenticated to receive further events
+  console.log("Autheticated:", bidders_names[socket.id]);
   socket.emit("log", null);
+  is_participating[bidders_names[socket.id]] = false;
+  console.log(JSON.stringify(is_participating));
+  io.emit("bidder", is_participating);
 
   //on connection message
   if (currentLot >= results.length) {
@@ -212,10 +230,19 @@ io.use(function (socket, next) {
   socket.join("others");
 
   //when user requests the number of participants
-  socket.on("participants", (msg) => {
+  socket.on("bidder", (msg) => {
     io.in("bidders").clients((error, clients) => {
-      bidders = clients.length;
-      socket.emit("participants", bidders);
+      var i;
+      Object.keys(is_participating).forEach(function (key, value) {
+        return (is_participating[key] = false);
+      });
+
+      for (i = 0; i < clients.length; i++) {
+        is_participating[bidders_names[clients[i]]] = true;
+      }
+
+      console.log("request", JSON.stringify(is_participating));
+      socket.emit("bidder", is_participating);
     });
   });
 
@@ -226,16 +253,24 @@ io.use(function (socket, next) {
       if (results[currentLot]["Status"] == "WAITING") {
         socket.leave("others");
         socket.join("bidders");
+        io.in("bidders").clients((error, clients) => {
+          //check who are the bidders
+          changeBidders(clients);
+        });
       }
     } else {
       //user leaves the bidding
       socket.join("others");
       socket.leave("bidders");
 
-      //if bidding is in progress
-      if (results[currentLot]["Status"] == "BIDDING") {
-        //check how many bidders remain
-        io.in("bidders").clients((error, clients) => {
+      io.in("bidders").clients((error, clients) => {
+        changeBidders(clients);
+
+        //if bidding is in progress
+        if (results[currentLot]["Status"] == "BIDDING") {
+          //check how many bidders remain
+          //check who are the bidders
+
           bidders = clients.length;
 
           //inform change in participants
@@ -263,17 +298,21 @@ io.use(function (socket, next) {
             Status: "BIDDING_L",
           });
           socket.emit("lot", bidding_obj);
-        });
-      }
+        }
+      });
     }
   });
 
   socket.on("disconnect", function () {
     //remove bidder
     bidders--;
+    delete is_participating[bidders_names[socket.id]];
     delete bidders_names[socket.id];
     socket.leave("bidders");
     socket.leave("others");
+    console.log("change", JSON.stringify(is_participating));
+
+    io.emit("bidder", is_participating);
   });
 });
 
@@ -359,6 +398,8 @@ const auctionInterval = () => {
         //Lot sold
         if (results[currentLot]["Status"] == "FINISHED") {
           io.in("bidders").clients((error, clients) => {
+            // set bidders to false
+
             if (error) throw error;
 
             //put winner back into other room
@@ -366,6 +407,10 @@ const auctionInterval = () => {
               console.log("more the one winner");
               if (error) throw error;
             }
+            is_participating[bidders_names[clients[0]]] = false;
+            console.log("change", JSON.stringify(is_participating));
+
+            io.emit("bidder", is_participating);
 
             io.sockets.connected[clients[0]].leave("bidders");
             io.sockets.connected[clients[0]].join("others");
