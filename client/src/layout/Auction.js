@@ -15,7 +15,7 @@ var socket = null;
 
 export const CounterContext = createContext();
 
-var canBid = true;
+var canBid = false;
 
 export default function Auction(props) {
   const [bidding, isBidding] = useState(false);
@@ -25,9 +25,7 @@ export default function Auction(props) {
   const _handleKeyDown = (event) => {
     switch (event.keyCode) {
       case ENTER_KEY:
-        if (canBid == true) {
-          isBidding(true);
-        }
+        isBidding(true);
         break;
       default:
         break;
@@ -37,9 +35,7 @@ export default function Auction(props) {
   const _handleKeyUp = (event) => {
     switch (event.keyCode) {
       case ENTER_KEY:
-        if (canBid == true) {
-          isBidding(false);
-        }
+        isBidding(false);
         break;
       default:
         break;
@@ -63,7 +59,7 @@ export default function Auction(props) {
     });
 
     socket.on("rbidding", function (data) {
-      canBid = true;
+      canBid = data;
     });
 
     document.addEventListener("keydown", _handleKeyDown);
@@ -78,13 +74,11 @@ export default function Auction(props) {
 
   useEffect(() => {
     if (lot["Status"] === "BIDDING_B") {
-      canBid = false;
       if (bidding === false) socket.emit("bidding", false);
       //emit
     }
 
     if (lot["Status"] === "WAITING") {
-      canBid = false;
       if (bidding === true) socket.emit("bidding", true);
       if (bidding === false) socket.emit("bidding", false);
 
@@ -122,7 +116,7 @@ export default function Auction(props) {
         <Timer socket={socket}></Timer>
 
         <p>Seconds</p>
-        {bidding ? (
+        {canBid ? (
           <span> You are Bidding in this Lot</span>
         ) : (
           <React.Fragment>
@@ -289,7 +283,7 @@ export default function Auction(props) {
               <div
                 className={cx("main", {
                   active:
-                    (bidding && lot["Status"] === "WAITING") ||
+                    (canBid && lot["Status"] === "WAITING") ||
                     lot["Status"] === "BIDDING_B" ||
                     lot["Status"] === "BIDDING_W",
                   failed: lot["Status"] === "BIDDING_L",
