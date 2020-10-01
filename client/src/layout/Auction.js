@@ -15,6 +15,8 @@ var socket = null;
 
 export const CounterContext = createContext();
 
+var canBid = true;
+
 export default function Auction(props) {
   const [bidding, isBidding] = useState(false);
   const [lot, setLot] = useState({ Status: null, "Lot Number": null });
@@ -23,7 +25,9 @@ export default function Auction(props) {
   const _handleKeyDown = (event) => {
     switch (event.keyCode) {
       case ENTER_KEY:
-        isBidding(true);
+        if (canBid == true) {
+          isBidding(true);
+        }
         break;
       default:
         break;
@@ -33,7 +37,9 @@ export default function Auction(props) {
   const _handleKeyUp = (event) => {
     switch (event.keyCode) {
       case ENTER_KEY:
-        isBidding(false);
+        if (canBid == true) {
+          isBidding(false);
+        }
         break;
       default:
         break;
@@ -56,6 +62,10 @@ export default function Auction(props) {
       setLot(data);
     });
 
+    socket.on("rbidding", function (data) {
+      canBid = true;
+    });
+
     document.addEventListener("keydown", _handleKeyDown);
     document.addEventListener("keyup", _handleKeyUp);
 
@@ -68,11 +78,13 @@ export default function Auction(props) {
 
   useEffect(() => {
     if (lot["Status"] === "BIDDING_B") {
+      canBid = false;
       if (bidding === false) socket.emit("bidding", false);
       //emit
     }
 
     if (lot["Status"] === "WAITING") {
+      canBid = false;
       if (bidding === true) socket.emit("bidding", true);
       if (bidding === false) socket.emit("bidding", false);
 

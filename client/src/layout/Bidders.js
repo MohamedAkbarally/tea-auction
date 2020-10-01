@@ -8,6 +8,9 @@ export default function Participants(props) {
   useEffect(() => {
     if (socket) {
       socket.on("bidder", function (data) {
+        Object.keys(data).forEach((key) =>
+          data[key] === undefined ? delete data[key] : {}
+        );
         setCount(Object.entries(data));
       });
       socket.emit("bidder");

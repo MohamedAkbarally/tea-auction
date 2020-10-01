@@ -203,14 +203,12 @@ io.use(function (socket, next) {
   console.log("Autheticated:", bidders_names[socket.id]);
   socket.emit("log", null);
   is_participating[bidders_names[socket.id]] = false;
-  console.log(JSON.stringify(is_participating));
   io.emit("bidder", is_participating);
 
   //on connection message
   if (currentLot >= results.length) {
     //if the auction is done
     socket.emit("lot", { Status: "DONE", "Lot Number": 0 });
-    socket.join("others");
   } else {
     //if lot is waiting to start
     if (results[currentLot]["Status"] == "WAITING") {
@@ -301,6 +299,8 @@ io.use(function (socket, next) {
         }
       });
     }
+
+    socket.emit("rbidding", msg);
   });
 
   socket.on("disconnect", function () {
@@ -308,6 +308,14 @@ io.use(function (socket, next) {
     bidders--;
     delete is_participating[bidders_names[socket.id]];
     delete bidders_names[socket.id];
+    Object.keys(is_participating).forEach(
+      (key) =>
+        is_participating[key] === undefined && delete is_participating[key]
+    );
+    Object.keys(bidders_names).forEach(
+      (key) => bidders_names[key] === undefined && delete bidders_names[key]
+    );
+
     socket.leave("bidders");
     socket.leave("others");
     console.log("change", JSON.stringify(is_participating));
