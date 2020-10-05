@@ -12,7 +12,7 @@ import jwt_decode from "jwt-decode";
 import axios from "axios";
 
 //on dev
-//axios.defaults.baseURL = "http://localhost:4001";
+//axios.defaults.baseURL = "http://192.168.1.114:4001";
 
 const invalid_token = () => {
   authenticated_initial = false;

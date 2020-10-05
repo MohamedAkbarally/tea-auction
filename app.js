@@ -139,6 +139,7 @@ app.get("/*", (req, res) => {
 
 app.use(index);
 
+//recalculates all the active bidders and set a message
 const changeBidders = (clients) => {
   var i;
   Object.keys(is_participating).forEach(function (key, value) {
@@ -149,7 +150,6 @@ const changeBidders = (clients) => {
     is_participating[bidders_names[clients[i]]] = true;
   }
 
-  console.log("change", JSON.stringify(is_participating));
   io.emit("bidder", is_participating);
 };
 
@@ -239,7 +239,6 @@ io.use(function (socket, next) {
         is_participating[bidders_names[clients[i]]] = true;
       }
 
-      console.log("request", JSON.stringify(is_participating));
       socket.emit("bidder", is_participating);
     });
   });
@@ -256,8 +255,9 @@ io.use(function (socket, next) {
           changeBidders(clients);
         });
       }
-    } else {
+    } else if (results[currentLot]["Status"] != "FINISHED") {
       //user leaves the bidding
+
       socket.join("others");
       socket.leave("bidders");
 
@@ -318,7 +318,6 @@ io.use(function (socket, next) {
 
     socket.leave("bidders");
     socket.leave("others");
-    console.log("change", JSON.stringify(is_participating));
 
     io.emit("bidder", is_participating);
   });
